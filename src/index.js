@@ -1,4 +1,7 @@
 import './styles.scss';
 import 'bootstrap';
+import app from './app';
 
-console.log('Hello, World!');
+//const url = { inputUrl: 'https://ru.hyyyexljmmjjjet.io/lessons.rss' };
+
+app();
