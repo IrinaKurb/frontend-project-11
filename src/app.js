@@ -3,34 +3,34 @@
 import * as yup from 'yup';
 import * as lodash from 'lodash';
 import axios from 'axios';
-import onChange from 'on-change';
-import { renderInputField, renderInitial, renderMsg } from './view';
+import { state, watchedState } from './watchers';
+import i18next from 'i18next';
+import locales from './locales';
 
-const state = {
-  arrayOfValidUrl: [],
-  isValid: true,
-  feedbackMsg: '',
-};
+const defaultLng = 'ru';
+
+// it is asinc fN!
+/* const i18nEl = i18next.createInstance();
+i18nEl.init({
+  lig: defaultLng,
+  debag: false,
+  locales,
+});*/
 
 const correctUrl = /^(?:https?):\/\/(\w+:?\w*)?(\S+)(:\d+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/;
-const schema = yup.object({
-  inputUrl: yup.string().matches(correctUrl, 'URL is not valid'),
+
+yup.setLocale({
+  mixed: {
+    notOneOf: () => ({ key: 'msgText.rssExist' }),
+  },
+  string: {
+    url: () => ({ key: 'msgText.invalidUrl' }),
+    matches: ({ key: 'msgText.rssLoaded' }),
+  },
 });
 
-const watchedState = onChange(state, (pathToEl, value) => {
-  switch (pathToEl) {
-    case 'isValid':
-      renderInputField(value);
-      break;
-    case 'arrayOfValidUrl':
-      renderInitial();
-      break;
-    case 'feedbackMsg':
-      renderMsg(value, state.isValid);
-      break;
-    default:
-      break;
-  }
+const schema = yup.object({
+  inputUrl: yup.string().matches(correctUrl, 'URL is not valid'),
 });
 
 const app = () => {

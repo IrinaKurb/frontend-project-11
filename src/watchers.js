@@ -1,12 +1,13 @@
 // здесь будет View. Блок, где происходит отрисовка //
+import onChange from 'on-change';
 
-export const renderInitial = () => {
+const renderInitial = () => {
   const formEl = document.querySelector('form');
   formEl.focus();
   formEl.reset();
 };
 
-export const renderInputField = (val) => {
+const renderInputField = (val) => {
   const inputEl = document.querySelector('[id="url-input"]');
   if (!val) {
     inputEl.classList.add('is-invalid');
@@ -15,7 +16,7 @@ export const renderInputField = (val) => {
   }
 };
 
-export const renderMsg = (msg, isValid) => {
+const renderMsg = (msg, isValid) => {
   const feedbackEl = document.getElementsByClassName('feedback')[0];
   feedbackEl.textContent = msg;
   const classOfInvalidMsg = 'text-danger';
@@ -28,3 +29,27 @@ export const renderMsg = (msg, isValid) => {
     feedbackEl.classList.remove(classOfValidMsg);
   }
 };
+
+const state = {
+  arrayOfValidUrl: [],
+  isValid: true,
+  feedbackMsg: '',
+};
+
+const watchedState = onChange(state, (pathToEl, value) => {
+  switch (pathToEl) {
+    case 'isValid':
+      renderInputField(value);
+      break;
+    case 'arrayOfValidUrl':
+      renderInitial();
+      break;
+    case 'feedbackMsg':
+      renderMsg(value, state.isValid);
+      break;
+    default:
+      break;
+  }
+});
+
+export { state, watchedState };
