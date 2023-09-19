@@ -1,17 +1,16 @@
 export default {
-  translation: {
-    language: {
-      ru: 'Русский',
-    },
-    title: 'RSS агрегатор',
-    subTitle: 'Твои главные новости всегда под рукой',
-    placeholderName: 'ссылка RSS',
-    example: 'Пример: https://ru.hexlet.io/lessons.rss',
-    msgText: {
-      rssExist: 'RSS уже существует',
+  ru: {
+    translation: {
+      title: 'RSS агрегатор',
+      subTitle: 'Твои главные новости всегда под рукой',
+      placeholderName: 'ссылка RSS',
+      example: 'Пример: https://ru.hexlet.io/lessons.rss',
       rssLoaded: 'RSS успешно загружен',
-      invalidUrl: 'Ссылка должна быть валидным URL',
+      btnText: 'Добавить',
+      errorMsg: {
+        rssExist: 'RSS уже существует',
+        invalidUrl: 'Ссылка должна быть валидным URL',
+      },
     },
-    btnText: 'Добавить',
   },
 };

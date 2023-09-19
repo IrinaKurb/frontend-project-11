@@ -3,54 +3,62 @@
 import * as yup from 'yup';
 import * as lodash from 'lodash';
 import axios from 'axios';
-import { state, watchedState } from './watchers';
 import i18next from 'i18next';
-import locales from './locales';
+import { watchedState, state, renderInterface } from './watchers';
+import resources from './locales';
 
 const defaultLng = 'ru';
 
-// it is asinc fN!
-/* const i18nEl = i18next.createInstance();
-i18nEl.init({
-  lig: defaultLng,
-  debag: false,
-  locales,
-});*/
+const interfaceElements = {
+  title: document.querySelector('.display-3'),
+  subTitle: document.querySelector('.lead'),
+  placeholderName: document.querySelector('[for="url-input"]'),
+  example: document.querySelector('.text-muted'),
+  btn: document.querySelector('[class="h-100 btn btn-lg btn-primary px-sm-5"]'),
+};
 
-const correctUrl = /^(?:https?):\/\/(\w+:?\w*)?(\S+)(:\d+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/;
+console.log(interfaceElements);
+
+const i18nEl = i18next.createInstance();
+i18nEl.init({
+  lng: defaultLng,
+  debag: false,
+  resources,
+});
 
 yup.setLocale({
   mixed: {
-    notOneOf: () => ({ key: 'msgText.rssExist' }),
+    notOneOf: () => ({ key: 'errorMsg.rssExist' }),
   },
   string: {
-    url: () => ({ key: 'msgText.invalidUrl' }),
-    matches: ({ key: 'msgText.rssLoaded' }),
+    url: () => ({ key: 'errorMsg.invalidUrl' }),
   },
-});
-
-const schema = yup.object({
-  inputUrl: yup.string().matches(correctUrl, 'URL is not valid'),
 });
 
 const app = () => {
+  renderInterface(i18nEl, interfaceElements);
   document.querySelector('form').addEventListener('submit', (event) => {
     event.preventDefault();
-    const urlForCheck = { inputUrl: event.target.url.value };
+    const schema = yup.object({
+      inputUrl: yup.string().url(),
+      inputUrlCheckDouble: yup.mixed().notOneOf(state.arrayOfValidUrl),
+    });
+
+    const urlForCheck = {
+      inputUrl: event.target.url.value,
+      inputUrlCheckDouble: event.target.url.value,
+    };
     schema.validate(urlForCheck)
       .then(() => {
-        if (state.arrayOfValidUrl.includes(urlForCheck.inputUrl)) {
-          watchedState.isValid = false;
-          watchedState.feedbackMsg = 'RSS уже существует';
-        } else {
-          watchedState.arrayOfValidUrl.push(urlForCheck.inputUrl);
-          watchedState.isValid = true;
-          watchedState.feedbackMsg = 'RSS успешно загружен';
-        }
+        watchedState.arrayOfValidUrl.push(urlForCheck.inputUrl);
+        watchedState.isValid = true;
+        watchedState.feedbackMsg = i18nEl.t('rssLoaded');
       })
-      .catch(() => {
+      .catch((err) => {
         watchedState.isValid = false;
-        watchedState.feedbackMsg = 'Ссылка должна быть валидным URL';
+        err.errors.forEach((error) => {
+          watchedState.feedbackMsg = i18nEl.t(error.key);
+        });
       });
   });
 };

@@ -1,5 +1,20 @@
+/* eslint no-param-reassign: "error" */
 // здесь будет View. Блок, где происходит отрисовка //
 import onChange from 'on-change';
+
+const state = {
+  arrayOfValidUrl: [],
+  isValid: true,
+  feedbackMsg: '',
+};
+
+const renderInterface = (i18nInstance, elements) => {
+  elements.title.textContent = i18nInstance.t('title');
+  elements.subTitle.textContent = i18nInstance.t('subTitle');
+  elements.placeholderName.textContent = i18nInstance.t('placeholderName');
+  elements.example.textContent = i18nInstance.t('example');
+  elements.btn.textContent = i18nInstance.t('btnText');
+};
 
 const renderInitial = () => {
   const formEl = document.querySelector('form');
@@ -30,12 +45,6 @@ const renderMsg = (msg, isValid) => {
   }
 };
 
-const state = {
-  arrayOfValidUrl: [],
-  isValid: true,
-  feedbackMsg: '',
-};
-
 const watchedState = onChange(state, (pathToEl, value) => {
   switch (pathToEl) {
     case 'isValid':
@@ -52,4 +61,4 @@ const watchedState = onChange(state, (pathToEl, value) => {
   }
 });
 
-export { state, watchedState };
+export { state, watchedState, renderInterface };
