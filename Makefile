@@ -4,7 +4,8 @@ develop:
 install:
 	npm ci
 
-build:
+build: 
+    rm -rf dist
 	NODE_ENV=production npx webpack
 
 test:
@@ -15,5 +16,3 @@ lint:
 
 remove:
 	rm -rf dist
-
-.PHONY: test
