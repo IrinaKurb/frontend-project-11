@@ -3,9 +3,12 @@
 import onChange from 'on-change';
 
 const state = {
+  status: 'filling',
   arrayOfValidUrl: [],
   isValid: true,
   feedbackMsg: '',
+  posts: [],
+  fids: [],
 };
 
 const renderInterface = (i18nInstance, elements) => {

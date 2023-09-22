@@ -6,6 +6,8 @@ import axios from 'axios';
 import i18next from 'i18next';
 import { watchedState, state, renderInterface } from './watchers';
 import resources from './locales';
+import parser from './flowParser.js';
+
 
 const defaultLng = 'ru';
 
@@ -16,8 +18,6 @@ const interfaceElements = {
   example: document.querySelector('.text-muted'),
   btn: document.querySelector('[class="h-100 btn btn-lg btn-primary px-sm-5"]'),
 };
-
-console.log(interfaceElements);
 
 const i18nEl = i18next.createInstance();
 i18nEl.init({
@@ -36,6 +36,28 @@ yup.setLocale({
 });
 
 const app = () => {
+  const getProxyUrl = (currentUrl) => {
+    const urlForProxyOrigins = new URL('/get', 'https://allorigins.hexlet.app');
+    urlForProxyOrigins.searchParams.set('url', currentUrl);
+    urlForProxyOrigins.searchParams.set('disableCache', true);
+    return urlForProxyOrigins.toString();
+  };
+
+  const a = getProxyUrl('https://aljazeera.com/xml/rss/all.xml');
+
+  const loadedPost = (data) => {
+    watchedState.status = 'postLoading';
+    axios.get(getProxyUrl(data))
+    .then((response) => {
+      const parsedResponse = parser(response.data.contents);
+      // console.log(response.data.contents);
+      // console.log('parserResp: '+JSON.stringify(parsedResponse)); 
+      parsedResponse.forEach((item) =>console.log(item.link))
+    })
+  };
+
+  console.log('aaaa:  ' + loadedPost(a));
+
   renderInterface(i18nEl, interfaceElements);
   document.querySelector('form').addEventListener('submit', (event) => {
     event.preventDefault();
@@ -61,6 +83,7 @@ const app = () => {
         });
       });
   });
+  loadedPost();
 };
 
 export default app;
