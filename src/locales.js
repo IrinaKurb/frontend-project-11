@@ -10,6 +10,7 @@ export default {
       errorMsg: {
         rssExist: 'RSS уже существует',
         invalidUrl: 'Ссылка должна быть валидным URL',
+        errorNetwork: 'Ошибка сети'
       },
     },
   },

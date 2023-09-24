@@ -43,22 +43,8 @@ const app = () => {
     return urlForProxyOrigins.toString();
   };
 
-  const a = getProxyUrl('https://aljazeera.com/xml/rss/all.xml');
-
-  const loadedPost = (data) => {
-    watchedState.status = 'postLoading';
-    axios.get(getProxyUrl(data))
-    .then((response) => {
-      const parsedResponse = parser(response.data.contents);
-      // console.log(response.data.contents);
-      // console.log('parserResp: '+JSON.stringify(parsedResponse)); 
-      parsedResponse.forEach((item) =>console.log(item.link))
-    })
-  };
-
-  console.log('aaaa:  ' + loadedPost(a));
-
   renderInterface(i18nEl, interfaceElements);
+
   document.querySelector('form').addEventListener('submit', (event) => {
     event.preventDefault();
     const schema = yup.object({
@@ -70,11 +56,31 @@ const app = () => {
       inputUrl: event.target.url.value,
       inputUrlCheckDouble: event.target.url.value,
     };
+
     schema.validate(urlForCheck)
       .then(() => {
-        watchedState.arrayOfValidUrl.push(urlForCheck.inputUrl);
-        watchedState.isValid = true;
-        watchedState.feedbackMsg = i18nEl.t('rssLoaded');
+        const data = urlForCheck.inputUrl;
+        const requestUrl = getProxyUrl(data);
+        axios.get(requestUrl)
+          .then((response) => {
+            watchedState.arrayOfValidUrl.push(urlForCheck.inputUrl);
+            watchedState.isValid = true;
+            watchedState.feedbackMsg = i18nEl.t('rssLoaded');
+            const parsedResponse = parser(response.data);
+      
+            const feedId = lodash.uniqueId();
+            parsedResponse.feed.Id = feedId;
+
+            parsedResponse.posts.map((post) => post.feedID = feedId);
+
+            watchedState.posts = parsedResponse.posts;
+            watchedState.feeds = parsedResponse.feed;
+          })
+          .catch(() => {
+            const errorKey = 'errorMsg.errorNetwork';
+            watchedState.isValid = true;
+            watchedState.networkError = i18nEl.t(errorKey);
+          })
       })
       .catch((err) => {
         watchedState.isValid = false;
@@ -83,7 +89,6 @@ const app = () => {
         });
       });
   });
-  loadedPost();
 };
 
 export default app;
