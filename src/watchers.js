@@ -35,7 +35,8 @@ const renderInputField = (val) => {
 };
 
 const renderNetworkError = (isErorr) => {
-  renderInputField(!isErorr);
+  if(!isErorr) return;
+  renderInputField(isErorr);
   const feedbackEl = document.getElementsByClassName('feedback')[0];
   const classOfInvalidMsg = 'text-danger';
   const classOfValidMsg = 'text-success';
@@ -44,6 +45,8 @@ const renderNetworkError = (isErorr) => {
 }
 
 const renderMsg = (msg, isValid) => {
+  console.log(msg);
+  console.log(isValid);
   const feedbackEl = document.getElementsByClassName('feedback')[0];
   feedbackEl.textContent = msg;
   const classOfInvalidMsg = 'text-danger';

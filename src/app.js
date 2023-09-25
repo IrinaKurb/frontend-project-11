@@ -40,11 +40,38 @@ const validateUrl = (url, links) => {
   return schema.validate(url);
 };
 
-const getProxyUrl = (currentUrl) => {
+const sendAxiousRequest = (currentUrl) => {
   const urlForProxyOrigins = new URL('/get', 'https://allorigins.hexlet.app');
   urlForProxyOrigins.searchParams.set('url', currentUrl);
   urlForProxyOrigins.searchParams.set('disableCache', true);
-  return urlForProxyOrigins.toString();
+  axios.get(urlForProxyOrigins.toString())
+  .then((response) => {
+    const parsedResponse = parser(response.data);
+
+    const feedId = lodash.uniqueId();
+    parsedResponse.feed.Id = feedId;
+    parsedResponse.posts.map((post) => post.feedID = feedId);
+
+    watchedState.posts = parsedResponse.posts;
+    watchedState.feeds = parsedResponse.feed;
+    watchedState.arrayOfValidUrl.push(currentUrl);
+    watchedState.isValid = true;
+    watchedState.networkError = false;
+
+    const msg = i18nEl.t('rssLoaded');
+    console.log("msg: " + msg);
+    watchedState.feedbackMsg = msg;
+  })
+  .catch(() => {
+    const errorKey = 'errorMsg.errorNetwork';
+    watchedState.feedbackMsg = i18nEl.t(errorKey);
+    watchedState.isValid = true;
+    watchedState.networkError = true;   
+  });
+};
+
+const getPost = (state) => {
+
 };
 
 const app = () => {
@@ -57,30 +84,7 @@ const app = () => {
 
     validateUrl(inputUrl, state.arrayOfValidUrl)
       .then((validUrl) => {
-          // console.log(validUrl);
-          const urlForAxios = getProxyUrl(validUrl);
-          axios.get(urlForAxios)
-            .then((response) => {
-              const parsedResponse = parser(response.data);
-  
-              const feedId = lodash.uniqueId();
-              parsedResponse.feed.Id = feedId;
-              parsedResponse.posts.map((post) => post.feedID = feedId);
-  
-              watchedState.posts = parsedResponse.posts;
-              watchedState.feeds = parsedResponse.feed;
-  
-              watchedState.arrayOfValidUrl.push(validUrl);
-              watchedState.isValid = true;
-              watchedState.networkError = false;
-              watchedState.feedbackMsg = i18nEl.t('rssLoaded');
-            })
-            .catch(() => {
-              const errorKey = 'errorMsg.errorNetwork';
-              watchedState.feedbackMsg = i18nEl.t(errorKey);
-              watchedState.isValid = true;
-              watchedState.networkError = true;   
-            });
+          sendAxiousRequest(validUrl)      
       })
       .catch((err) => {
         watchedState.isValid = false;

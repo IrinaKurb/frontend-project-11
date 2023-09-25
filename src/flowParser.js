@@ -1,5 +1,4 @@
 const parser = (data) => {
-    // console.log(data);
     const contents = data['contents'];
     const DOMParserObj = new DOMParser();
     const doc = DOMParserObj.parseFromString(contents, 'text/xml');
@@ -18,7 +17,6 @@ const parser = (data) => {
 
     const itemElements = doc.querySelectorAll('item');
     const posts = Array.from(itemElements).reduce((acc, item) => {
-        // console.log(item);
         const resObj = {
             title: item.querySelector('title').textContent,
             link: item.querySelector('link').textContent,
