@@ -8,7 +8,7 @@ const state = {
   feedbackMsg: '',
   posts: [],
   feeds: [],
-  networkError: null,
+  networkError: false,
 };
 
 const renderInterface = (i18nInstance, elements) => {
@@ -34,17 +34,11 @@ const renderInputField = (val) => {
   }
 };
 
-const renderNetworkError = (msg, validStatus) => {
-  console.log("рендер только для нет сети");
-
-  renderInputField(validStatus);
-
+const renderNetworkError = (isErorr) => {
+  renderInputField(!isErorr);
   const feedbackEl = document.getElementsByClassName('feedback')[0];
-
   const classOfInvalidMsg = 'text-danger';
   const classOfValidMsg = 'text-success';
-
-  feedbackEl.textContent = msg;
   feedbackEl.classList.add(classOfInvalidMsg);
   feedbackEl.classList.remove(classOfValidMsg);
 }
@@ -147,7 +141,7 @@ const watchedState = onChange(state, (pathToEl, value) => {
       renderFeed(value);
       break;
     case 'networkError':
-      renderNetworkError(value, state.isValid);
+      renderNetworkError(value);
       break;
     case 'posts':
       renderPosts(value);

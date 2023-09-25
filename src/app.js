@@ -35,52 +35,52 @@ yup.setLocale({
   },
 });
 
-const app = () => {
-  const getProxyUrl = (currentUrl) => {
-    const urlForProxyOrigins = new URL('/get', 'https://allorigins.hexlet.app');
-    urlForProxyOrigins.searchParams.set('url', currentUrl);
-    urlForProxyOrigins.searchParams.set('disableCache', true);
-    return urlForProxyOrigins.toString();
-  };
+const validateUrl = (url, links) => {
+  const schema = yup.string().trim().required().url().notOneOf(links);
+  return schema.validate(url);
+};
 
+const getProxyUrl = (currentUrl) => {
+  const urlForProxyOrigins = new URL('/get', 'https://allorigins.hexlet.app');
+  urlForProxyOrigins.searchParams.set('url', currentUrl);
+  urlForProxyOrigins.searchParams.set('disableCache', true);
+  return urlForProxyOrigins.toString();
+};
+
+const app = () => {
   renderInterface(i18nEl, interfaceElements);
 
   document.querySelector('form').addEventListener('submit', (event) => {
     event.preventDefault();
-    const schema = yup.object({
-      inputUrl: yup.string().url(),
-      inputUrlCheckDouble: yup.mixed().notOneOf(state.arrayOfValidUrl),
-    });
 
-    const urlForCheck = {
-      inputUrl: event.target.url.value,
-      inputUrlCheckDouble: event.target.url.value,
-    };
+    const inputUrl = event.target.url.value;
 
-    schema.validate(urlForCheck)
-      .then(() => {
-        const data = urlForCheck.inputUrl;
-        const requestUrl = getProxyUrl(data);
-        axios.get(requestUrl)
-          .then((response) => {
-            watchedState.arrayOfValidUrl.push(urlForCheck.inputUrl);
-            watchedState.isValid = true;
-            watchedState.feedbackMsg = i18nEl.t('rssLoaded');
-            const parsedResponse = parser(response.data);
-      
-            const feedId = lodash.uniqueId();
-            parsedResponse.feed.Id = feedId;
-
-            parsedResponse.posts.map((post) => post.feedID = feedId);
-
-            watchedState.posts = parsedResponse.posts;
-            watchedState.feeds = parsedResponse.feed;
-          })
-          .catch(() => {
-            const errorKey = 'errorMsg.errorNetwork';
-            watchedState.isValid = true;
-            watchedState.networkError = i18nEl.t(errorKey);
-          })
+    validateUrl(inputUrl, state.arrayOfValidUrl)
+      .then((validUrl) => {
+          // console.log(validUrl);
+          const urlForAxios = getProxyUrl(validUrl);
+          axios.get(urlForAxios)
+            .then((response) => {
+              const parsedResponse = parser(response.data);
+  
+              const feedId = lodash.uniqueId();
+              parsedResponse.feed.Id = feedId;
+              parsedResponse.posts.map((post) => post.feedID = feedId);
+  
+              watchedState.posts = parsedResponse.posts;
+              watchedState.feeds = parsedResponse.feed;
+  
+              watchedState.arrayOfValidUrl.push(validUrl);
+              watchedState.isValid = true;
+              watchedState.networkError = false;
+              watchedState.feedbackMsg = i18nEl.t('rssLoaded');
+            })
+            .catch(() => {
+              const errorKey = 'errorMsg.errorNetwork';
+              watchedState.feedbackMsg = i18nEl.t(errorKey);
+              watchedState.isValid = true;
+              watchedState.networkError = true;   
+            });
       })
       .catch((err) => {
         watchedState.isValid = false;
