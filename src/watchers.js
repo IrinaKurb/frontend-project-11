@@ -35,7 +35,7 @@ const renderInputField = (val) => {
 };
 
 const renderNetworkError = (isErorr) => {
-  if(!isErorr) return;
+  if (!isErorr) return;
   renderInputField(isErorr);
   const feedbackEl = document.getElementsByClassName('feedback')[0];
   const classOfInvalidMsg = 'text-danger';
@@ -45,8 +45,6 @@ const renderNetworkError = (isErorr) => {
 }
 
 const renderMsg = (msg, isValid) => {
-  console.log(msg);
-  console.log(isValid);
   const feedbackEl = document.getElementsByClassName('feedback')[0];
   feedbackEl.textContent = msg;
   const classOfInvalidMsg = 'text-danger';
@@ -81,14 +79,15 @@ const renderFeed = (val) => {
   if (!feedEl.querySelectorAll('div').length) {
     renderFeedAndPostCommomPart(feedEl);
   }
+  const lastAddedFeed = val.at(-1);
   const liEl = document.createElement('li');
   liEl.classList.add('list-group-item', 'border-0', 'border-end-0');
   const h3eEl = document.createElement('h3');
   h3eEl.classList.add('h6', 'm-0');
-  h3eEl.textContent = val.channelTitle;
+  h3eEl.textContent = lastAddedFeed .channelTitle;
   const pEl = document.createElement('p');
   pEl.classList.add('m-0', 'small', 'text-black-50');
-  pEl.textContent = val.channelDescription;
+  pEl.textContent = lastAddedFeed .channelDescription;
   feedEl.querySelector('ul').prepend(liEl);
   liEl.append(h3eEl);
   h3eEl.append(pEl);
@@ -101,13 +100,14 @@ const renderPosts = (val) => {
   if (!postsEl.querySelectorAll('div').length) {
     renderFeedAndPostCommomPart(postsEl);
   }
-  Array.from(val).forEach((eachPost) => {
+  const lastAddedRss = val.at(-1);
+  lastAddedRss.forEach((eachPost) => {
     const liEl = document.createElement('li');
     liEl.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
     const aEl = document.createElement('a');
     aEl.setAttribute('href', `${eachPost.link}`);
     aEl.setAttribute('class', 'fw-bold');
-    aEl.setAttribute('data-id', `${eachPost.feedID}`);
+    aEl.setAttribute('data-id', `${eachPost.postId}`);
     aEl.setAttribute('rel', 'noopener noreferrer');
     aEl.textContent = eachPost.title;
     liEl.append(aEl);
@@ -116,18 +116,19 @@ const renderPosts = (val) => {
     const btnEl = document.createElement('button');
     btnEl.setAttribute('type', 'button');
     btnEl.classList.add('btn', 'btn-outline-primary', 'btn-sm');
-    btnEl.setAttribute('data-id', `${eachPost.feedID}`);
+    btnEl.setAttribute('data-id', `${eachPost.postId}`);
     btnEl.setAttribute('data-bs-toggle', 'modal');
     btnEl.setAttribute('data-bs-target', '#modal');
     btnEl.textContent = 'Просмотр';
 
     liEl.append(btnEl);
   });
+
 };
 
 
 const watchedState = onChange(state, (pathToEl, value) => {
-  console.log('--------------')
+  console.log('It is state below!!!!!!!!!!')
   console.log(state);
   console.log('--------------')
   switch (pathToEl) {

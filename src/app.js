@@ -40,38 +40,65 @@ const validateUrl = (url, links) => {
   return schema.validate(url);
 };
 
-const sendAxiousRequest = (currentUrl) => {
+const urlForAxious = (currentUrl) => {
   const urlForProxyOrigins = new URL('/get', 'https://allorigins.hexlet.app');
   urlForProxyOrigins.searchParams.set('url', currentUrl);
   urlForProxyOrigins.searchParams.set('disableCache', true);
-  axios.get(urlForProxyOrigins.toString())
-  .then((response) => {
-    const parsedResponse = parser(response.data);
-
-    const feedId = lodash.uniqueId();
-    parsedResponse.feed.Id = feedId;
-    parsedResponse.posts.map((post) => post.feedID = feedId);
-
-    watchedState.posts = parsedResponse.posts;
-    watchedState.feeds = parsedResponse.feed;
-    watchedState.arrayOfValidUrl.push(currentUrl);
-    watchedState.isValid = true;
-    watchedState.networkError = false;
-
-    const msg = i18nEl.t('rssLoaded');
-    console.log("msg: " + msg);
-    watchedState.feedbackMsg = msg;
-  })
-  .catch(() => {
-    const errorKey = 'errorMsg.errorNetwork';
-    watchedState.feedbackMsg = i18nEl.t(errorKey);
-    watchedState.isValid = true;
-    watchedState.networkError = true;   
-  });
+  return urlForProxyOrigins.toString();
 };
 
-const getPost = (state) => {
+const createFeedObj = (parsedFeed, fId, validUrl) => {
+  parsedFeed.feedId = fId;
+  parsedFeed.url = validUrl;
+  //state.feeds.push(parsedFeed);
+  return parsedFeed;
+};
 
+const createPostObj = (parsedPosts, fId) => {
+  parsedPosts.map((post) => {
+    post.feedId = fId;
+    post.postId = lodash.uniqueId();
+  });
+  //state.posts.push(postsWithId);
+  return parsedPosts;
+};
+
+const checkOldPostsForNewPosts = (oldPosts, newPosts) => {
+  return newPosts.filter((newPost) => !oldPosts.includes(newPost));
+}
+
+const findDiff = (state, chosenUrl) => {
+  const urlForReqest = urlForAxious(chosenUrl);
+  axios.get(urlForReqest)
+    .then((response) => {
+      const newPosts = parser(response.data).posts.map(element => element.title);
+      const chosenFeedObj = state.feeds.filter((feed) => feed.url === chosenUrl);
+      const chosenUrlId = chosenFeedObj[0].feedId;
+      const postsForChosenUrl = state.posts.flat().filter((item) => chosenUrlId === item.feedId);
+      // console.log('state.posts: ' + JSON.stringify(state.posts));
+      const oldPosts = postsForChosenUrl.map((el) => el.title);
+      // console.log('postsForChosenUrl: ' + JSON.stringify(postsForChosenUrl));
+      // console.log(oldPosts);
+      const postsForAdd = checkOldPostsForNewPosts(oldPosts, newPosts);
+      // console.log('postsForAdd ' + JSON.stringify(postsForAdd));
+      if (postsForAdd.length > 0) {
+        const postObjForAdd = parser(response.data).posts.filter((el) => postsForAdd.includes(el.title));
+        // console.log('postObjForAdd: ' + JSON.stringify(postObjForAdd));
+        const postObjs = createPostObj(postObjForAdd, chosenUrlId);
+        watchedState.posts.push(postObjs);
+      }
+    })
+};
+
+const checkActualRss = (state) => {
+  setTimeout(() => {
+    state.arrayOfValidUrl.filter((currentRss) => {
+      //по rss загрузить посты
+      console.log('updating!' + currentRss);
+      findDiff(state, currentRss);
+    });
+    checkActualRss(state);
+  }, 5000);
 };
 
 const app = () => {
@@ -84,7 +111,31 @@ const app = () => {
 
     validateUrl(inputUrl, state.arrayOfValidUrl)
       .then((validUrl) => {
-          sendAxiousRequest(validUrl)      
+        axios.get(urlForAxious(validUrl))
+          .then((response) => {
+            const feedId = lodash.uniqueId();
+            const parsedResponse = parser(response.data);
+            const genFeed = createFeedObj(parsedResponse.feed, feedId, validUrl);
+            const genPosts = createPostObj(parsedResponse.posts, feedId);
+
+            watchedState.feeds.push(genFeed);
+            watchedState.posts.push(genPosts);
+
+            watchedState.arrayOfValidUrl.push(validUrl);
+            watchedState.isValid = true;
+            watchedState.networkError = false;
+            const msg = i18nEl.t('rssLoaded');
+            watchedState.feedbackMsg = msg;
+
+            findDiff(state, validUrl);
+
+          })
+          .catch(() => {
+            const errorKey = 'errorMsg.errorNetwork';
+            watchedState.feedbackMsg = i18nEl.t(errorKey);
+            watchedState.isValid = true;
+            watchedState.networkError = true;
+          });
       })
       .catch((err) => {
         watchedState.isValid = false;
@@ -93,6 +144,7 @@ const app = () => {
         });
       });
   });
+  checkActualRss(state);
 };
 
 export default app;
