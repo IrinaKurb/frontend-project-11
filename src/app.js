@@ -88,17 +88,15 @@ const findDiff = (state, chosenUrl) => {
         watchedState.posts.push(postObjs);
       }
     })
+    .catch(() => ({}));
 };
 
-const checkActualRss = (state) => {
-  setTimeout(() => {
-    state.arrayOfValidUrl.filter((currentRss) => {
-      //по rss загрузить посты
-      console.log('updating!' + currentRss);
-      findDiff(state, currentRss);
-    });
-    checkActualRss(state);
-  }, 5000);
+const checkActualRss = (watchedState) => {
+const newPostsToPromises = Promise.all(state.arrayOfValidUrl.map((eachUrl) => {
+  console.log('updating: ' + eachUrl);
+  return findDiff(watchedState, eachUrl);
+}));
+newPostsToPromises.finally(setTimeout(() => checkActualRss(watchedState), 5000))
 };
 
 const app = () => {
@@ -126,9 +124,6 @@ const app = () => {
             watchedState.networkError = false;
             const msg = i18nEl.t('rssLoaded');
             watchedState.feedbackMsg = msg;
-
-            findDiff(state, validUrl);
-
           })
           .catch(() => {
             const errorKey = 'errorMsg.errorNetwork';
