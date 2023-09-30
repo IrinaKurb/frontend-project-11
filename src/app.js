@@ -8,7 +8,6 @@ import { watchedState, state, renderInterface } from './watchers';
 import resources from './locales';
 import parser from './flowParser.js';
 
-
 const defaultLng = 'ru';
 
 const interfaceElements = {
@@ -16,9 +15,8 @@ const interfaceElements = {
   subTitle: document.querySelector('.lead'),
   placeholderName: document.querySelector('[for="url-input"]'),
   example: document.querySelector('.text-muted'),
-  btn: document.querySelector('[class="h-100 btn btn-lg btn-primary px-sm-5"]'),
+  btnAddText: document.querySelector('[class="h-100 btn btn-lg btn-primary px-sm-5"]'),
 };
-document.getElementsByClassName('feeds')[0]
 
 const i18nEl = i18next.createInstance();
 i18nEl.init({
@@ -104,7 +102,7 @@ const markClickedButtons = () => {
   })
 }
 
-const addPosts = (state, chosenUrl) => {
+const addNewPostsAfterUpdate = (state, chosenUrl) => {
   const urlForReqest = urlForAxious(chosenUrl);
   axios.get(urlForReqest)
     .then((response) => {
@@ -127,13 +125,13 @@ const addPosts = (state, chosenUrl) => {
       markClickedButtons();
       markClickedLinks();
     })
-    .catch((err) => (console.log('axious error! ' + err)));
+    .catch((err) => (console.log('error in addPosts func! ' + err)));
 };
 
 const checkActualRss = (watchedState) => {
   const newPostsToPromises = Promise.all(state.arrayOfValidUrl.map((eachUrl) => {
     console.log('updating: ' + eachUrl);
-    return addPosts(watchedState, eachUrl);
+    return addNewPostsAfterUpdate(watchedState, eachUrl);
   }));
 
   newPostsToPromises.finally(setTimeout(() => {
@@ -144,17 +142,26 @@ const checkActualRss = (watchedState) => {
 const app = () => {
   renderInterface(i18nEl, interfaceElements);
 
+  state.elements.viewBtn = i18nEl.t('btns.btnWatch');
+  state.elements.readBtn = i18nEl.t('btns.btnReadMore');
+  state.elements.closeBtn = i18nEl.t('btns.btnClose');
+  state.elements.feedTitleEl = i18nEl.t('feedElTitle');
+  state.elements.postTitleEl = i18nEl.t('postElTitle');
+
   document.querySelector('form').addEventListener('submit', (event) => {
     event.preventDefault();
 
     const inputUrl = event.target.url.value;
-
     validateUrl(inputUrl, state.arrayOfValidUrl)
       .then((validUrl) => {
+        watchedState.status = 'loading';
         axios.get(urlForAxious(validUrl))
           .then((response) => {
+            watchedState.status = 'filling';
             const feedId = lodash.uniqueId();
             const parsedResponse = parser(response.data);
+            // console.log('parsedResponse app func' + parsedResponse);
+
             const genFeed = createFeedObj(parsedResponse.feed, feedId, validUrl);
             const genPosts = createPostObj(parsedResponse.posts, feedId);
 
@@ -166,17 +173,27 @@ const app = () => {
             watchedState.networkError = false;
             const msg = i18nEl.t('rssLoaded');
             watchedState.feedbackMsg = msg;
+
             checkActualRss(state);
+          
           })
-          .catch(() => {
-            const errorKey = 'errorMsg.errorNetwork';
-            watchedState.feedbackMsg = i18nEl.t(errorKey);
-            watchedState.isValid = true;
-            watchedState.networkError = true;
+          .catch((err) => {
+            watchedState.status = 'filling';
+            watchedState.isValid = false;
+            if (err.message === 'The XML parser does not represent well-formed XML!') {
+              watchedState.feedbackMsg = i18nEl.t('errorMsg.wrongRss');
+              watchedState.networkError = false;
+            }
+            else {
+              const errorKey = 'errorMsg.errorNetwork';
+              watchedState.feedbackMsg = i18nEl.t(errorKey);
+              watchedState.networkError = true;
+            }
           });
       })
       .catch((err) => {
         watchedState.isValid = false;
+        watchedState.status = 'filling';
         err.errors.forEach((error) => {
           watchedState.feedbackMsg = i18nEl.t(error.key);
         });

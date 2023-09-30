@@ -3,6 +3,7 @@
 import onChange from 'on-change';
 
 const state = {
+  status: 'filling',
   arrayOfValidUrl: [],
   isValid: true,
   feedbackMsg: '',
@@ -13,6 +14,13 @@ const state = {
     clickedIdPosts: [],
     modalWinContent: null,
   },
+  elements: {
+    feedTitleEl: null,
+    postTitleEl: null,
+    viewBtn: null,
+    readBtn: null,
+    closeBtn: null,
+  },
 };
 
 const renderInterface = (i18nInstance, elements) => {
@@ -20,7 +28,16 @@ const renderInterface = (i18nInstance, elements) => {
   elements.subTitle.textContent = i18nInstance.t('subTitle');
   elements.placeholderName.textContent = i18nInstance.t('placeholderName');
   elements.example.textContent = i18nInstance.t('example');
-  elements.btn.textContent = i18nInstance.t('btnText');
+  elements.btnAddText.textContent = i18nInstance.t('btns.btnAdd');
+};
+
+const renderStatus = (val) => {
+  const btnEl = document.querySelector('[type="submit"]');
+  if (val === 'loading') {
+    btnEl.setAttribute('disabled', 'disabled');
+  } else {
+    btnEl.removeAttribute('disabled');
+  }
 };
 
 const renderInitial = () => {
@@ -70,7 +87,7 @@ const renderFeedAndPostCommomPart = (el) => {
   divElLevel2.classList.add('card-body');
   divElLevel1.append(divElLevel2);
   const h2El = document.createElement('h2');
-  el.classList.contains('posts') ? h2El.textContent = 'Посты' : h2El.textContent = 'Фиды';
+  el.classList.contains('posts') ? h2El.textContent = state.elements.postTitleEl : h2El.textContent = state.elements.feedTitleEl;
   h2El.classList.add('card-title', 'h4');
   divElLevel2.append(h2El);
   const ulEl = document.createElement('ul');
@@ -88,10 +105,10 @@ const renderFeed = (val) => {
   liEl.classList.add('list-group-item', 'border-0', 'border-end-0');
   const h3eEl = document.createElement('h3');
   h3eEl.classList.add('h6', 'm-0');
-  h3eEl.textContent = lastAddedFeed .channelTitle;
+  h3eEl.textContent = lastAddedFeed.channelTitle;
   const pEl = document.createElement('p');
   pEl.classList.add('m-0', 'small', 'text-black-50');
-  pEl.textContent = lastAddedFeed .channelDescription;
+  pEl.textContent = lastAddedFeed.channelDescription;
   feedEl.querySelector('ul').prepend(liEl);
   liEl.append(h3eEl);
   h3eEl.append(pEl);
@@ -124,7 +141,8 @@ const renderPosts = (val) => {
     btnEl.setAttribute('data-id', `${eachPost.postId}`);
     btnEl.setAttribute('data-bs-toggle', 'modal');
     btnEl.setAttribute('data-bs-target', '#modal');
-    btnEl.textContent = 'Просмотр';
+
+    btnEl.textContent = state.elements.viewBtn;
 
     liEl.append(btnEl);
   });
@@ -141,10 +159,13 @@ const renderClickedPost = (val) => {
 const renderModalWindow = (val) => {
   const modalTitle = document.querySelector('[class="modal-title"]');
   const modalDesc = document.querySelector('[class="modal-body text-break"]');
-  const modalFooter = document.querySelector('[class="btn btn-primary full-article"]');
+  const modalReadBtn = document.querySelector('[class="btn btn-primary full-article"]');
+  const modalCloseEl = document.querySelector('[class="btn btn-secondary"]');
+  modalReadBtn.textContent = state.elements.readBtn;
+  modalCloseEl.textContent = state.elements.closeBtn;
   modalTitle.textContent = val.title;
   modalDesc.textContent = val.decription;
-  modalFooter.setAttribute('href', val.link);
+  modalReadBtn.setAttribute('href', val.link);
 };
 
 const watchedState = onChange(state, (pathToEl, value) => {
@@ -152,6 +173,9 @@ const watchedState = onChange(state, (pathToEl, value) => {
   console.log(state);
   console.log('--------------')
   switch (pathToEl) {
+    case 'status':
+      renderStatus(value);
+      break;
     case 'isValid':
       renderInputField(value);
       break;

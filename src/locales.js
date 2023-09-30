@@ -6,11 +6,20 @@ export default {
       placeholderName: 'ссылка RSS',
       example: 'Пример: https://ru.hexlet.io/lessons.rss',
       rssLoaded: 'RSS успешно загружен',
-      btnText: 'Добавить',
+      feedElTitle: 'Фиды',
+      postElTitle: 'Посты',
+      btns: {
+        btnAdd: 'Добавить',
+        btnWatch: 'Просмотр',
+        btnReadMore: 'Читать полностью',
+        btnClose: 'Закрыть',
+      },
       errorMsg: {
         rssExist: 'RSS уже существует',
         invalidUrl: 'Ссылка должна быть валидным URL',
-        errorNetwork: 'Ошибка сети'
+        errorNetwork: 'Ошибка сети',
+        wrongRss: 'Ресурс не содержит валидный RSS',
+        emptyField: 'Не должно быть пустым',
       },
     },
   },
