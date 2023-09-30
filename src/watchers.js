@@ -63,7 +63,7 @@ const renderNetworkError = (isErorr) => {
   const classOfValidMsg = 'text-success';
   feedbackEl.classList.add(classOfInvalidMsg);
   feedbackEl.classList.remove(classOfValidMsg);
-}
+};
 
 const renderMsg = (msg, isValid) => {
   const feedbackEl = document.getElementsByClassName('feedback')[0];
@@ -87,7 +87,11 @@ const renderFeedAndPostCommomPart = (el) => {
   divElLevel2.classList.add('card-body');
   divElLevel1.append(divElLevel2);
   const h2El = document.createElement('h2');
-  el.classList.contains('posts') ? h2El.textContent = state.elements.postTitleEl : h2El.textContent = state.elements.feedTitleEl;
+  if (el.classList.contains('posts')) {
+    h2El.textContent = state.elements.postTitleEl;
+  } else {
+    h2El.textContent = state.elements.feedTitleEl;
+  }
   h2El.classList.add('card-title', 'h4');
   divElLevel2.append(h2El);
   const ulEl = document.createElement('ul');
@@ -116,8 +120,6 @@ const renderFeed = (val) => {
 
 const renderPosts = (val) => {
   const postsEl = document.getElementsByClassName('posts')[0];
-  // console.log('---------------');
-  // console.log(JSON.stringify(val));
   if (!postsEl.querySelectorAll('div').length) {
     renderFeedAndPostCommomPart(postsEl);
   }
@@ -146,7 +148,6 @@ const renderPosts = (val) => {
 
     liEl.append(btnEl);
   });
-
 };
 
 const renderClickedPost = (val) => {
@@ -169,9 +170,6 @@ const renderModalWindow = (val) => {
 };
 
 const watchedState = onChange(state, (pathToEl, value) => {
-  console.log('It is state below!!!!!!!!!!')
-  console.log(state);
-  console.log('--------------')
   switch (pathToEl) {
     case 'status':
       renderStatus(value);

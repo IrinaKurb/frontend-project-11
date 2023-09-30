@@ -35,7 +35,8 @@ yup.setLocale({
 });
 
 const validateUrl = (url, links) => {
-  const schema = yup.string().trim().required().url().notOneOf(links);
+  const schema = yup.string().trim().required().url()
+    .notOneOf(links);
   return schema.validate(url);
 };
 
@@ -49,23 +50,19 @@ const urlForAxious = (currentUrl) => {
 const createFeedObj = (parsedFeed, fId, validUrl) => {
   parsedFeed.feedId = fId;
   parsedFeed.url = validUrl;
-  //state.feeds.push(parsedFeed);
   return parsedFeed;
 };
 
 const createPostObj = (parsedPosts, fId) => {
-  parsedPosts.map((post) => {
+  parsedPosts.forEach((post) => {
     post.feedId = fId;
     post.postId = lodash.uniqueId();
   });
-  //state.posts.push(postsWithId);
   return parsedPosts;
 };
 
-const checkOldPostsForNewPosts = (oldPosts, newPosts) => {
-  return newPosts.filter((newPost) => !oldPosts.includes(newPost));
-}
-
+const checkOldPostsForNewPosts = (oldPosts, newPosts) => (
+  newPosts.filter((newPost) => !oldPosts.includes(newPost)));
 const markClickedLinks = () => {
   const allPostsEl = document.querySelector('[class="list-group border-0 rounded-0"]');
   const allLiEl = allPostsEl.querySelectorAll('a');
@@ -73,70 +70,70 @@ const markClickedLinks = () => {
     eachLiEl.addEventListener('click', (event) => {
       const clickedPost = event.target;
       const idClickedPost = eachLiEl.getAttribute('data-id');
-      //console.log('id clicked post: '+ idClickedPost);
-      console.log('click!!!!!' + JSON.stringify({ clickedPost, idClickedPost }));
       watchedState.stateUI.clickedIdPosts.push({ clickedPost, idClickedPost });
     });
   });
-}
+};
 
 const markClickedButtons = () => {
   const allPostsEl = document.querySelector('[class="list-group border-0 rounded-0"]');
   allPostsEl.querySelectorAll('button').forEach((eachBtnEl) => {
     eachBtnEl.addEventListener('click', (event) => {
-      console.log("clicked");
       const clickedBtn = event.target;
       const idClickedBtn = clickedBtn.getAttribute('data-id');
       const joinArrayOfPosts = lodash.flattenDeep(state.posts);
       const infForClikedPost = joinArrayOfPosts.filter((el) => el.postId === idClickedBtn);
-      console.log(infForClikedPost);
       const titleClickedPost = infForClikedPost[0].title;
       const descClikedPost = infForClikedPost[0].description;
       const linkClickedPost = infForClikedPost[0].link;
 
       const siblingBtnLink = clickedBtn.previousSibling;
 
-      watchedState.stateUI.clickedIdPosts.push({ clickedPost: siblingBtnLink, idClickedPost: idClickedBtn });
-      watchedState.stateUI.modalWinContent = { title: titleClickedPost, decription: descClikedPost, link: linkClickedPost };
+      watchedState.stateUI.clickedIdPosts.push(
+        {
+          clickedPost: siblingBtnLink,
+          idClickedPost: idClickedBtn,
+        },
+      );
+      watchedState.stateUI.modalWinContent = {
+        title: titleClickedPost,
+        decription: descClikedPost,
+        link: linkClickedPost,
+      };
     });
-  })
-}
+  });
+};
 
-const addNewPostsAfterUpdate = (state, chosenUrl) => {
+const addNewPostsAfterUpdate = (stateEl, chosenUrl) => {
   const urlForReqest = urlForAxious(chosenUrl);
   axios.get(urlForReqest)
     .then((response) => {
-      const newPosts = parser(response.data).posts.map(element => element.title);
-      const chosenFeedObj = state.feeds.filter((feed) => feed.url === chosenUrl);
+      const newPosts = parser(response.data).posts.map((element) => element.title);
+      const chosenFeedObj = stateEl.feeds.filter((feed) => feed.url === chosenUrl);
       const chosenUrlId = chosenFeedObj[0].feedId;
-      const postsForChosenUrl = state.posts.flat().filter((item) => chosenUrlId === item.feedId);
-      // console.log('state.posts: ' + JSON.stringify(state.posts));
+      const postsForChosenUrl = stateEl.posts.flat().filter((item) => chosenUrlId === item.feedId);
       const oldPosts = postsForChosenUrl.map((el) => el.title);
-      // console.log('postsForChosenUrl: ' + JSON.stringify(postsForChosenUrl));
-      // console.log(oldPosts);
       const postsForAdd = checkOldPostsForNewPosts(oldPosts, newPosts);
-      // console.log('postsForAdd ' + JSON.stringify(postsForAdd));
       if (postsForAdd.length > 0) {
-        const postObjForAdd = parser(response.data).posts.filter((el) => postsForAdd.includes(el.title));
-        // console.log('postObjForAdd: ' + JSON.stringify(postObjForAdd));
+        const postObjForAdd = parser(response.data)
+          .posts.filter((el) => postsForAdd
+            .includes(el.title));
         const postObjs = createPostObj(postObjForAdd, chosenUrlId);
         watchedState.posts.push(postObjs);
       }
       markClickedButtons();
       markClickedLinks();
     })
-    .catch((err) => (console.log('error in addPosts func! ' + err)));
+    .catch((err) => console.log(err));
 };
 
-const checkActualRss = (watchedState) => {
-  const newPostsToPromises = Promise.all(state.arrayOfValidUrl.map((eachUrl) => {
-    console.log('updating: ' + eachUrl);
-    return addNewPostsAfterUpdate(watchedState, eachUrl);
-  }));
-
+const checkActualRss = (currentState) => {
+  const newPostsToPromises = Promise.all(currentState.arrayOfValidUrl.map(
+    (eachUrl) => addNewPostsAfterUpdate(currentState, eachUrl),
+  ));
   newPostsToPromises.finally(setTimeout(() => {
-    checkActualRss(watchedState);
-  }, 5000))
+    checkActualRss(currentState);
+  }, 5000));
 };
 
 const app = () => {
@@ -160,7 +157,6 @@ const app = () => {
             watchedState.status = 'filling';
             const feedId = lodash.uniqueId();
             const parsedResponse = parser(response.data);
-            // console.log('parsedResponse app func' + parsedResponse);
 
             const genFeed = createFeedObj(parsedResponse.feed, feedId, validUrl);
             const genPosts = createPostObj(parsedResponse.posts, feedId);
@@ -175,7 +171,6 @@ const app = () => {
             watchedState.feedbackMsg = msg;
 
             checkActualRss(state);
-          
           })
           .catch((err) => {
             watchedState.status = 'filling';
@@ -183,8 +178,7 @@ const app = () => {
             if (err.message === 'The XML parser does not represent well-formed XML!') {
               watchedState.feedbackMsg = i18nEl.t('errorMsg.wrongRss');
               watchedState.networkError = false;
-            }
-            else {
+            } else {
               const errorKey = 'errorMsg.errorNetwork';
               watchedState.feedbackMsg = i18nEl.t(errorKey);
               watchedState.networkError = true;
@@ -198,7 +192,7 @@ const app = () => {
           watchedState.feedbackMsg = i18nEl.t(error.key);
         });
       });
-  })
+  });
 };
 
 export default app;
