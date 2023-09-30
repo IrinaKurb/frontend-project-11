@@ -9,6 +9,10 @@ const state = {
   posts: [],
   feeds: [],
   networkError: false,
+  stateUI: {
+    clickedIdPosts: [],
+    modalWinContent: null,
+  },
 };
 
 const renderInterface = (i18nInstance, elements) => {
@@ -107,6 +111,7 @@ const renderPosts = (val) => {
     const aEl = document.createElement('a');
     aEl.setAttribute('href', `${eachPost.link}`);
     aEl.setAttribute('class', 'fw-bold');
+    aEl.setAttribute('target', '_blank');
     aEl.setAttribute('data-id', `${eachPost.postId}`);
     aEl.setAttribute('rel', 'noopener noreferrer');
     aEl.textContent = eachPost.title;
@@ -126,6 +131,21 @@ const renderPosts = (val) => {
 
 };
 
+const renderClickedPost = (val) => {
+  const lastAddedClicked = val.at(-1);
+  lastAddedClicked.clickedPost.classList.remove('class', 'fw-bold');
+  lastAddedClicked.clickedPost.classList.add('class', 'fw-normal');
+  lastAddedClicked.clickedPost.classList.add('class', 'link-secondary');
+};
+
+const renderModalWindow = (val) => {
+  const modalTitle = document.querySelector('[class="modal-title"]');
+  const modalDesc = document.querySelector('[class="modal-body text-break"]');
+  const modalFooter = document.querySelector('[class="btn btn-primary full-article"]');
+  modalTitle.textContent = val.title;
+  modalDesc.textContent = val.decription;
+  modalFooter.setAttribute('href', val.link);
+};
 
 const watchedState = onChange(state, (pathToEl, value) => {
   console.log('It is state below!!!!!!!!!!')
@@ -149,6 +169,12 @@ const watchedState = onChange(state, (pathToEl, value) => {
       break;
     case 'posts':
       renderPosts(value);
+      break;
+    case 'stateUI.clickedIdPosts':
+      renderClickedPost(value);
+      break;
+    case 'stateUI.modalWinContent':
+      renderModalWindow(value);
       break;
     default:
       break;

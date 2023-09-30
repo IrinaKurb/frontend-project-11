@@ -18,6 +18,7 @@ const interfaceElements = {
   example: document.querySelector('.text-muted'),
   btn: document.querySelector('[class="h-100 btn btn-lg btn-primary px-sm-5"]'),
 };
+document.getElementsByClassName('feeds')[0]
 
 const i18nEl = i18next.createInstance();
 i18nEl.init({
@@ -67,7 +68,43 @@ const checkOldPostsForNewPosts = (oldPosts, newPosts) => {
   return newPosts.filter((newPost) => !oldPosts.includes(newPost));
 }
 
-const findDiff = (state, chosenUrl) => {
+const markClickedLinks = () => {
+  const allPostsEl = document.querySelector('[class="list-group border-0 rounded-0"]');
+  const allLiEl = allPostsEl.querySelectorAll('a');
+  allLiEl.forEach((eachLiEl) => {
+    eachLiEl.addEventListener('click', (event) => {
+      const clickedPost = event.target;
+      const idClickedPost = eachLiEl.getAttribute('data-id');
+      //console.log('id clicked post: '+ idClickedPost);
+      console.log('click!!!!!' + JSON.stringify({ clickedPost, idClickedPost }));
+      watchedState.stateUI.clickedIdPosts.push({ clickedPost, idClickedPost });
+    });
+  });
+}
+
+const markClickedButtons = () => {
+  const allPostsEl = document.querySelector('[class="list-group border-0 rounded-0"]');
+  allPostsEl.querySelectorAll('button').forEach((eachBtnEl) => {
+    eachBtnEl.addEventListener('click', (event) => {
+      console.log("clicked");
+      const clickedBtn = event.target;
+      const idClickedBtn = clickedBtn.getAttribute('data-id');
+      const joinArrayOfPosts = lodash.flattenDeep(state.posts);
+      const infForClikedPost = joinArrayOfPosts.filter((el) => el.postId === idClickedBtn);
+      console.log(infForClikedPost);
+      const titleClickedPost = infForClikedPost[0].title;
+      const descClikedPost = infForClikedPost[0].description;
+      const linkClickedPost = infForClikedPost[0].link;
+
+      const siblingBtnLink = clickedBtn.previousSibling;
+
+      watchedState.stateUI.clickedIdPosts.push({ clickedPost: siblingBtnLink, idClickedPost: idClickedBtn });
+      watchedState.stateUI.modalWinContent = { title: titleClickedPost, decription: descClikedPost, link: linkClickedPost };
+    });
+  })
+}
+
+const addPosts = (state, chosenUrl) => {
   const urlForReqest = urlForAxious(chosenUrl);
   axios.get(urlForReqest)
     .then((response) => {
@@ -87,16 +124,21 @@ const findDiff = (state, chosenUrl) => {
         const postObjs = createPostObj(postObjForAdd, chosenUrlId);
         watchedState.posts.push(postObjs);
       }
+      markClickedButtons();
+      markClickedLinks();
     })
-    .catch(() => ({}));
+    .catch((err) => (console.log('axious error! ' + err)));
 };
 
 const checkActualRss = (watchedState) => {
-const newPostsToPromises = Promise.all(state.arrayOfValidUrl.map((eachUrl) => {
-  console.log('updating: ' + eachUrl);
-  return findDiff(watchedState, eachUrl);
-}));
-newPostsToPromises.finally(setTimeout(() => checkActualRss(watchedState), 5000))
+  const newPostsToPromises = Promise.all(state.arrayOfValidUrl.map((eachUrl) => {
+    console.log('updating: ' + eachUrl);
+    return addPosts(watchedState, eachUrl);
+  }));
+
+  newPostsToPromises.finally(setTimeout(() => {
+    checkActualRss(watchedState);
+  }, 5000))
 };
 
 const app = () => {
@@ -124,6 +166,7 @@ const app = () => {
             watchedState.networkError = false;
             const msg = i18nEl.t('rssLoaded');
             watchedState.feedbackMsg = msg;
+            checkActualRss(state);
           })
           .catch(() => {
             const errorKey = 'errorMsg.errorNetwork';
@@ -138,8 +181,7 @@ const app = () => {
           watchedState.feedbackMsg = i18nEl.t(error.key);
         });
       });
-  });
-  checkActualRss(state);
+  })
 };
 
 export default app;
