@@ -2,37 +2,19 @@
 // здесь будет View. Блок, где происходит отрисовка //
 import onChange from 'on-change';
 
-const state = {
-  status: 'filling',
-  arrayOfValidUrl: [],
-  isValid: true,
-  feedbackMsg: '',
-  posts: [],
-  feeds: [],
-  networkError: false,
-  stateUI: {
-    clickedIdPosts: [],
-    modalWinContent: null,
-  },
-  elements: {
-    feedTitleEl: null,
-    postTitleEl: null,
-    viewBtn: null,
-    readBtn: null,
-    closeBtn: null,
-  },
-};
-
 const renderInterface = (i18nInstance, elements) => {
-  elements.title.textContent = i18nInstance.t('title');
-  elements.subTitle.textContent = i18nInstance.t('subTitle');
-  elements.placeholderName.textContent = i18nInstance.t('placeholderName');
-  elements.example.textContent = i18nInstance.t('example');
-  elements.btnAddText.textContent = i18nInstance.t('btns.btnAdd');
-};
+  elements.initEl.title.textContent = i18nInstance.t('title');
+  elements.initEl.subTitle.textContent = i18nInstance.t('subTitle');
+  elements.initEl.placeholderName.textContent = i18nInstance.t('placeholderName');
+  elements.initEl.example.textContent = i18nInstance.t('example');
+  elements.initEl.btnAddText.textContent = i18nInstance.t('btns.btnAdd');
+  elements.initEl.authorInf.innerHTML = `${i18nInstance.t('author')} <a href="https://github.com/IrinaKurb" target="_blank">IrinaKurb</a>`;
+  elements.initEl.modalReadBtn.textContent = i18nInstance.t('btns.btnReadMore');
+  elements.initEl.modalCloseEl.textContent = i18nInstance.t('btns.btnClose');
+};   
 
-const renderStatus = (val) => {
-  const btnEl = document.querySelector('[type="submit"]');
+const renderStatus = (val, elements) => {
+  const btnEl = elements.initEl.btnAddText;
   if (val === 'loading') {
     btnEl.setAttribute('disabled', 'disabled');
   } else {
@@ -40,14 +22,14 @@ const renderStatus = (val) => {
   }
 };
 
-const renderInitial = () => {
-  const formEl = document.querySelector('form');
+const renderInitial = (elements) => {
+  const formEl = elements.initEl.formEl;
   formEl.focus();
   formEl.reset();
 };
 
-const renderInputField = (val) => {
-  const inputEl = document.querySelector('[id="url-input"]');
+const renderInputField = (val, elements) => {
+  const inputEl = elements.initEl.inputFieldEl;
   if (!val) {
     inputEl.classList.add('is-invalid');
   } else {
@@ -55,18 +37,18 @@ const renderInputField = (val) => {
   }
 };
 
-const renderNetworkError = (isErorr) => {
+const renderNetworkError = (isErorr, elements) => {
   if (!isErorr) return;
-  renderInputField(isErorr);
-  const feedbackEl = document.getElementsByClassName('feedback')[0];
+  renderInputField(isErorr, elements);
+  const feedbackEl = elements.initEl.feedbackEl;
   const classOfInvalidMsg = 'text-danger';
   const classOfValidMsg = 'text-success';
   feedbackEl.classList.add(classOfInvalidMsg);
   feedbackEl.classList.remove(classOfValidMsg);
 };
 
-const renderMsg = (msg, isValid) => {
-  const feedbackEl = document.getElementsByClassName('feedback')[0];
+const renderMsg = (msg, isValid, elements) => {
+  const feedbackEl = elements.initEl.feedbackEl;
   feedbackEl.textContent = msg;
   const classOfInvalidMsg = 'text-danger';
   const classOfValidMsg = 'text-success';
@@ -79,7 +61,7 @@ const renderMsg = (msg, isValid) => {
   }
 };
 
-const renderFeedAndPostCommomPart = (el) => {
+const renderFeedAndPostCommomPart = (el, elements) => {
   const divElLevel1 = document.createElement('div');
   divElLevel1.classList.add('card', 'border-0');
   el.append(divElLevel1);
@@ -88,9 +70,9 @@ const renderFeedAndPostCommomPart = (el) => {
   divElLevel1.append(divElLevel2);
   const h2El = document.createElement('h2');
   if (el.classList.contains('posts')) {
-    h2El.textContent = state.elements.postTitleEl;
+    h2El.textContent = elements.feedAndPostsEl.postTitleEl;
   } else {
-    h2El.textContent = state.elements.feedTitleEl;
+    h2El.textContent = elements.feedAndPostsEl.feedTitleEl;
   }
   h2El.classList.add('card-title', 'h4');
   divElLevel2.append(h2El);
@@ -99,10 +81,10 @@ const renderFeedAndPostCommomPart = (el) => {
   el.append(ulEl);
 };
 
-const renderFeed = (val) => {
-  const feedEl = document.getElementsByClassName('feeds')[0];
+const renderFeed = (val, elements) => {
+  const feedEl = elements.feedAndPostsEl.feedsFieldEl;
   if (!feedEl.querySelectorAll('div').length) {
-    renderFeedAndPostCommomPart(feedEl);
+    renderFeedAndPostCommomPart(feedEl, elements);
   }
   const lastAddedFeed = val.at(-1);
   const liEl = document.createElement('li');
@@ -118,10 +100,10 @@ const renderFeed = (val) => {
   h3eEl.append(pEl);
 };
 
-const renderPosts = (val) => {
-  const postsEl = document.getElementsByClassName('posts')[0];
+const renderPosts = (val, elements) => {
+  const postsEl = elements.feedAndPostsEl.postsFieldEl;
   if (!postsEl.querySelectorAll('div').length) {
-    renderFeedAndPostCommomPart(postsEl);
+    renderFeedAndPostCommomPart(postsEl, elements);
   }
   const lastAddedRss = val.at(-1);
   lastAddedRss.forEach((eachPost) => {
@@ -144,7 +126,7 @@ const renderPosts = (val) => {
     btnEl.setAttribute('data-bs-toggle', 'modal');
     btnEl.setAttribute('data-bs-target', '#modal');
 
-    btnEl.textContent = state.elements.viewBtn;
+    btnEl.textContent = elements.feedAndPostsEl.viewBtn;
 
     liEl.append(btnEl);
   });
@@ -157,50 +139,47 @@ const renderClickedPost = (val) => {
   lastAddedClicked.clickedPost.classList.add('class', 'link-secondary');
 };
 
-const renderModalWindow = (val) => {
-  const modalTitle = document.querySelector('[class="modal-title"]');
-  const modalDesc = document.querySelector('[class="modal-body text-break"]');
-  const modalReadBtn = document.querySelector('[class="btn btn-primary full-article"]');
-  const modalCloseEl = document.querySelector('[class="btn btn-secondary"]');
-  modalReadBtn.textContent = state.elements.readBtn;
-  modalCloseEl.textContent = state.elements.closeBtn;
+const renderModalWindow = (val, elements) => {
+  const modalTitle = elements.modalWinEl.modalTitleEl;
+  const modalDesc = elements.modalWinEl.modalDescEl;
+  const modalReadBtn = elements.initEl.modalReadBtn;
   modalTitle.textContent = val.title;
   modalDesc.textContent = val.decription;
   modalReadBtn.setAttribute('href', val.link);
 };
 
-const watchedState = onChange(state, (pathToEl, value) => {
+const buildWatchedState = (state, elements) => onChange(state, (pathToEl, value) => {
   switch (pathToEl) {
     case 'status':
-      renderStatus(value);
+      renderStatus(value, elements);
       break;
     case 'isValid':
-      renderInputField(value);
+      renderInputField(value, elements);
       break;
     case 'arrayOfValidUrl':
-      renderInitial();
+      renderInitial(elements);
       break;
     case 'feedbackMsg':
-      renderMsg(value, state.isValid);
+      renderMsg(value, state.isValid, elements);
       break;
     case 'feeds':
-      renderFeed(value);
+      renderFeed(value, elements);
       break;
     case 'networkError':
-      renderNetworkError(value);
+      renderNetworkError(value, elements);
       break;
     case 'posts':
-      renderPosts(value);
+      renderPosts(value, elements);
       break;
     case 'stateUI.clickedIdPosts':
       renderClickedPost(value);
       break;
     case 'stateUI.modalWinContent':
-      renderModalWindow(value);
+      renderModalWindow(value, elements);
       break;
     default:
       break;
   }
 });
 
-export { state, watchedState, renderInterface };
+export { renderInterface, buildWatchedState };

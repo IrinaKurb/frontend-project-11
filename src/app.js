@@ -1,22 +1,12 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint no-param-reassign: "error" */
 import * as yup from 'yup';
 import * as lodash from 'lodash';
 import axios from 'axios';
 import i18next from 'i18next';
-import { watchedState, state, renderInterface } from './watchers';
 import resources from './locales';
 import parser from './flowParser.js';
+import { buildWatchedState, renderInterface} from './watchers';
 
 const defaultLng = 'ru';
-
-const interfaceElements = {
-  title: document.querySelector('.display-3'),
-  subTitle: document.querySelector('.lead'),
-  placeholderName: document.querySelector('[for="url-input"]'),
-  example: document.querySelector('.text-muted'),
-  btnAddText: document.querySelector('[class="h-100 btn btn-lg btn-primary px-sm-5"]'),
-};
 
 const i18nEl = i18next.createInstance();
 i18nEl.init({
@@ -63,7 +53,8 @@ const createPostObj = (parsedPosts, fId) => {
 
 const checkOldPostsForNewPosts = (oldPosts, newPosts) => (
   newPosts.filter((newPost) => !oldPosts.includes(newPost)));
-const markClickedLinks = () => {
+
+const markClickedLinks = (watchedState) => {
   const allPostsEl = document.querySelector('[class="list-group border-0 rounded-0"]');
   const allLiEl = allPostsEl.querySelectorAll('a');
   allLiEl.forEach((eachLiEl) => {
@@ -75,7 +66,7 @@ const markClickedLinks = () => {
   });
 };
 
-const markClickedButtons = () => {
+const markClickedButtons = (state, watchedState) => {
   const allPostsEl = document.querySelector('[class="list-group border-0 rounded-0"]');
   allPostsEl.querySelectorAll('button').forEach((eachBtnEl) => {
     eachBtnEl.addEventListener('click', (event) => {
@@ -104,7 +95,7 @@ const markClickedButtons = () => {
   });
 };
 
-const addNewPostsAfterUpdate = (stateEl, chosenUrl) => {
+const addNewPostsAfterUpdate = (stateEl, chosenUrl, watchedState) => {
   const urlForReqest = urlForAxious(chosenUrl);
   axios.get(urlForReqest)
     .then((response) => {
@@ -121,29 +112,66 @@ const addNewPostsAfterUpdate = (stateEl, chosenUrl) => {
         const postObjs = createPostObj(postObjForAdd, chosenUrlId);
         watchedState.posts.push(postObjs);
       }
-      markClickedButtons();
-      markClickedLinks();
+      markClickedButtons(stateEl, watchedState);
+      markClickedLinks(watchedState);
     })
     .catch((err) => console.log(err));
 };
 
-const checkActualRss = (currentState) => {
+const checkActualRss = (currentState, elements, watchedState) => {
   const newPostsToPromises = Promise.all(currentState.arrayOfValidUrl.map(
-    (eachUrl) => addNewPostsAfterUpdate(currentState, eachUrl),
+    (eachUrl) => addNewPostsAfterUpdate(currentState, eachUrl, watchedState),
   ));
   newPostsToPromises.finally(setTimeout(() => {
-    checkActualRss(currentState);
+    checkActualRss(currentState, elements, watchedState);
   }, 5000));
 };
 
 const app = () => {
-  renderInterface(i18nEl, interfaceElements);
+  const interfaceElements = {
+    initEl: {
+      title: document.querySelector('.display-3'),
+      subTitle: document.querySelector('.lead'),
+      placeholderName: document.querySelector('[for="url-input"]'),
+      example: document.querySelector('.text-muted'),
+      btnAddText: document.querySelector('[class="h-100 btn btn-lg btn-primary px-sm-5"]'),
+      authorInf: document.querySelector('[class="text-center"]'),
+      modalReadBtn: document.querySelector('[class="btn btn-primary full-article"]'),
+      modalCloseEl: document.querySelector('[class="btn btn-secondary"]'),
+      formEl: document.querySelector('form'),
+      inputFieldEl: document.querySelector('[id="url-input"]'),
+      feedbackEl: document.getElementsByClassName('feedback')[0],
+    },
+    feedAndPostsEl: {
+      feedsFieldEl: document.getElementsByClassName('feeds')[0],
+      postsFieldEl: document.getElementsByClassName('posts')[0],
+      feedTitleEl: i18nEl.t('feedElTitle'),
+      postTitleEl: i18nEl.t('postElTitle'),
+      viewBtn: i18nEl.t('btns.btnWatch'),
+    },
+    modalWinEl: {
+      modalTitleEl: document.querySelector('[class="modal-title"]'),
+      modalDescEl: document.querySelector('[class="modal-body text-break"]'),
+    }
+  };
 
-  state.elements.viewBtn = i18nEl.t('btns.btnWatch');
-  state.elements.readBtn = i18nEl.t('btns.btnReadMore');
-  state.elements.closeBtn = i18nEl.t('btns.btnClose');
-  state.elements.feedTitleEl = i18nEl.t('feedElTitle');
-  state.elements.postTitleEl = i18nEl.t('postElTitle');
+  const state = {
+    status: 'filling',
+    arrayOfValidUrl: [],
+    isValid: true,
+    feedbackMsg: '',
+    posts: [],
+    feeds: [],
+    networkError: false,
+    stateUI: {
+      clickedIdPosts: [],
+      modalWinContent: null,
+    },
+  };
+
+  const watchedState = buildWatchedState(state, interfaceElements);
+
+  renderInterface(i18nEl, interfaceElements);
 
   document.querySelector('form').addEventListener('submit', (event) => {
     event.preventDefault();
@@ -170,7 +198,7 @@ const app = () => {
             const msg = i18nEl.t('rssLoaded');
             watchedState.feedbackMsg = msg;
 
-            checkActualRss(state);
+            checkActualRss(state, interfaceElements, watchedState);
           })
           .catch((err) => {
             watchedState.status = 'filling';

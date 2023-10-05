@@ -3,6 +3,6 @@
 
 [![Maintainability](https://api.codeclimate.com/v1/badges/8a44a8d44645271e2a63/maintainability)](https://codeclimate.com/github/IrinaKurb/frontend-project-11/maintainability)
 
-Rss Reader — сервис для агрегации RSS-потоков, с помощью которых удобно читать разнообразные источники, например, блоги. Он позволяет добавлять неограниченное количество RSS-лент, сам их обновляет и добавляет новые записи в общий поток.
+RSS Reader is a web application that aggregates web content such as online newspapers, blogs, podcasts, and video blogs (vlogs) in one location for easy viewing. It can add a lot of RSS-feeds, refresh them, and add them to a list of posts.
 
-Ссылка на сервис: https://frontend-project-11-eight-eta.vercel.app/
+link for try: https://frontend-project-11-eight-eta.vercel.app/

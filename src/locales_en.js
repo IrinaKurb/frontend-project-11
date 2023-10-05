@@ -8,6 +8,7 @@ export default {
       rssLoaded: 'RSS is uploaded successfully',
       feedElTitle: 'Feeds',
       postElTitle: 'Posts',
+      author: 'created by',
       btns: {
         btnAdd: 'Add',
         btnWatch: 'View',

@@ -8,6 +8,7 @@ export default {
       rssLoaded: 'RSS успешно загружен',
       feedElTitle: 'Фиды',
       postElTitle: 'Посты',
+      author: 'создано',
       btns: {
         btnAdd: 'Добавить',
         btnWatch: 'Просмотр',
