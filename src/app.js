@@ -4,7 +4,7 @@ import axios from 'axios';
 import i18next from 'i18next';
 import resources from './locales';
 import parser from './flowParser.js';
-import { buildWatchedState, renderInterface} from './watchers';
+import { buildWatchedState, renderInterface } from './watchers';
 
 const defaultLng = 'ru';
 
@@ -152,7 +152,7 @@ const app = () => {
     modalWinEl: {
       modalTitleEl: document.querySelector('[class="modal-title"]'),
       modalDescEl: document.querySelector('[class="modal-body text-break"]'),
-    }
+    },
   };
 
   const state = {

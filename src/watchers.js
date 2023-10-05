@@ -11,7 +11,7 @@ const renderInterface = (i18nInstance, elements) => {
   elements.initEl.authorInf.innerHTML = `${i18nInstance.t('author')} <a href="https://github.com/IrinaKurb" target="_blank">IrinaKurb</a>`;
   elements.initEl.modalReadBtn.textContent = i18nInstance.t('btns.btnReadMore');
   elements.initEl.modalCloseEl.textContent = i18nInstance.t('btns.btnClose');
-};   
+};
 
 const renderStatus = (val, elements) => {
   const btnEl = elements.initEl.btnAddText;
@@ -23,7 +23,7 @@ const renderStatus = (val, elements) => {
 };
 
 const renderInitial = (elements) => {
-  const formEl = elements.initEl.formEl;
+  const { formEl } = elements.initEl;
   formEl.focus();
   formEl.reset();
 };
@@ -40,7 +40,7 @@ const renderInputField = (val, elements) => {
 const renderNetworkError = (isErorr, elements) => {
   if (!isErorr) return;
   renderInputField(isErorr, elements);
-  const feedbackEl = elements.initEl.feedbackEl;
+  const { feedbackEl } = elements.initEl;
   const classOfInvalidMsg = 'text-danger';
   const classOfValidMsg = 'text-success';
   feedbackEl.classList.add(classOfInvalidMsg);
@@ -48,7 +48,7 @@ const renderNetworkError = (isErorr, elements) => {
 };
 
 const renderMsg = (msg, isValid, elements) => {
-  const feedbackEl = elements.initEl.feedbackEl;
+  const { feedbackEl } = elements.initEl;
   feedbackEl.textContent = msg;
   const classOfInvalidMsg = 'text-danger';
   const classOfValidMsg = 'text-success';
@@ -140,11 +140,11 @@ const renderClickedPost = (val) => {
 };
 
 const renderModalWindow = (val, elements) => {
-  const modalTitle = elements.modalWinEl.modalTitleEl;
-  const modalDesc = elements.modalWinEl.modalDescEl;
-  const modalReadBtn = elements.initEl.modalReadBtn;
-  modalTitle.textContent = val.title;
-  modalDesc.textContent = val.decription;
+  const { modalTitleEl, modalDescEl } = elements.modalWinEl;
+  const { modalReadBtn } = elements.initEl;
+
+  modalTitleEl.textContent = val.title;
+  modalDescEl.textContent = val.decription;
   modalReadBtn.setAttribute('href', val.link);
 };
 
