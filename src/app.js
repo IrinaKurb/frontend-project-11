@@ -54,44 +54,25 @@ const createPostObj = (parsedPosts, fId) => {
 const checkOldPostsForNewPosts = (oldPosts, newPosts) => (
   newPosts.filter((newPost) => !oldPosts.includes(newPost)));
 
-const markClickedLinks = (watchedState) => {
-  const allPostsEl = document.querySelector('[class="list-group border-0 rounded-0"]');
-  const allLiEl = allPostsEl.querySelectorAll('a');
-  allLiEl.forEach((eachLiEl) => {
-    eachLiEl.addEventListener('click', (event) => {
-      const clickedPost = event.target;
-      const idClickedPost = eachLiEl.getAttribute('data-id');
-      watchedState.stateUI.clickedIdPosts.push({ clickedPost, idClickedPost });
-    });
-  });
-};
+const markClickedElements = (state, watchedState, elements) => {
+  const allPostsEl = elements.initEl.parentElForPosts;
+  allPostsEl.addEventListener('click', (event) => {
+    const clickedPost = event.target;
+    const idClickedPost = clickedPost.getAttribute('data-id');
+    if (idClickedPost === undefined || idClickedPost === null) return;
+    watchedState.stateUI.clickedIdPosts.push(idClickedPost);
 
-const markClickedButtons = (state, watchedState) => {
-  const allPostsEl = document.querySelector('[class="list-group border-0 rounded-0"]');
-  allPostsEl.querySelectorAll('button').forEach((eachBtnEl) => {
-    eachBtnEl.addEventListener('click', (event) => {
-      const clickedBtn = event.target;
-      const idClickedBtn = clickedBtn.getAttribute('data-id');
-      const joinArrayOfPosts = lodash.flattenDeep(state.posts);
-      const infForClikedPost = joinArrayOfPosts.filter((el) => el.postId === idClickedBtn);
-      const titleClickedPost = infForClikedPost[0].title;
-      const descClikedPost = infForClikedPost[0].description;
-      const linkClickedPost = infForClikedPost[0].link;
+    const joinArrayOfPosts = lodash.flattenDeep(state.posts);
+    const infForClikedPost = joinArrayOfPosts.filter((el) => el.postId === idClickedPost);
+    const titleClickedPost = infForClikedPost[0].title;
+    const descClikedPost = infForClikedPost[0].description;
+    const linkClickedPost = infForClikedPost[0].link;
 
-      const siblingBtnLink = clickedBtn.previousSibling;
-
-      watchedState.stateUI.clickedIdPosts.push(
-        {
-          clickedPost: siblingBtnLink,
-          idClickedPost: idClickedBtn,
-        },
-      );
-      watchedState.stateUI.modalWinContent = {
-        title: titleClickedPost,
-        decription: descClikedPost,
-        link: linkClickedPost,
-      };
-    });
+    watchedState.stateUI.modalWinContent = {
+      title: titleClickedPost,
+      decription: descClikedPost,
+      link: linkClickedPost,
+    };
   });
 };
 
@@ -112,8 +93,6 @@ const addNewPostsAfterUpdate = (stateEl, chosenUrl, watchedState) => {
         const postObjs = createPostObj(postObjForAdd, chosenUrlId);
         watchedState.posts.push(postObjs);
       }
-      markClickedButtons(stateEl, watchedState);
-      markClickedLinks(watchedState);
     })
     .catch((err) => console.log(err));
 };
@@ -141,6 +120,7 @@ const app = () => {
       formEl: document.querySelector('form'),
       inputFieldEl: document.querySelector('[id="url-input"]'),
       feedbackEl: document.getElementsByClassName('feedback')[0],
+      parentElForPosts: document.querySelector('[class="col-md-10 col-lg-8 order-1 mx-auto posts"]'),
     },
     feedAndPostsEl: {
       feedsFieldEl: document.getElementsByClassName('feeds')[0],
@@ -173,7 +153,9 @@ const app = () => {
 
   renderInterface(i18nEl, interfaceElements);
 
-  document.querySelector('form').addEventListener('submit', (event) => {
+  markClickedElements(state, watchedState, interfaceElements);
+
+  interfaceElements.initEl.formEl.addEventListener('submit', (event) => {
     event.preventDefault();
 
     const inputUrl = event.target.url.value;

@@ -133,10 +133,14 @@ const renderPosts = (val, elements) => {
 };
 
 const renderClickedPost = (val) => {
-  const lastAddedClicked = val.at(-1);
-  lastAddedClicked.clickedPost.classList.remove('class', 'fw-bold');
-  lastAddedClicked.clickedPost.classList.add('class', 'fw-normal');
-  lastAddedClicked.clickedPost.classList.add('class', 'link-secondary');
+  const lastAddedClickedId = val.at(-1);
+  console.log(lastAddedClickedId);
+  const allPostElements = Array.from(document.querySelectorAll('[rel="noopener noreferrer"]'));
+  const filtredClickedItem = allPostElements.filter((item) => item.getAttribute('data-id') === lastAddedClickedId);
+  const clickedItem = filtredClickedItem[0];
+  clickedItem.classList.remove('class', 'fw-bold');
+  clickedItem.classList.add('class', 'fw-normal');
+  clickedItem.classList.add('class', 'link-secondary');
 };
 
 const renderModalWindow = (val, elements) => {
@@ -149,6 +153,7 @@ const renderModalWindow = (val, elements) => {
 };
 
 const buildWatchedState = (state, elements) => onChange(state, (pathToEl, value) => {
+  console.log(state);
   switch (pathToEl) {
     case 'status':
       renderStatus(value, elements);
