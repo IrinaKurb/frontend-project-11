@@ -7,7 +7,6 @@ import parser from './flowParser.js';
 import { buildWatchedState, renderInterface } from './watchers';
 
 const app = () => {
-
   const defaultLng = 'ru';
 
   const i18nEl = i18next.createInstance();
@@ -85,7 +84,8 @@ const app = () => {
         const newPosts = parser(response.data).posts.map((element) => element.title);
         const chosenFeedObj = stateEl.feeds.filter((feed) => feed.url === chosenUrl);
         const chosenUrlId = chosenFeedObj[0].feedId;
-        const postsForChosenUrl = stateEl.posts.flat().filter((item) => chosenUrlId === item.feedId);
+        const postsForChosenUrl = stateEl.posts.flat()
+          .filter((item) => chosenUrlId === item.feedId);
         const oldPosts = postsForChosenUrl.map((el) => el.title);
         const postsForAdd = checkOldPostsForNewPosts(oldPosts, newPosts);
         if (postsForAdd.length > 0) {
