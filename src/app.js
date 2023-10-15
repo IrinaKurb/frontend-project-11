@@ -6,107 +6,108 @@ import resources from './locales';
 import parser from './flowParser.js';
 import { buildWatchedState, renderInterface } from './watchers';
 
-const defaultLng = 'ru';
-
-const i18nEl = i18next.createInstance();
-i18nEl.init({
-  lng: defaultLng,
-  debag: false,
-  resources,
-});
-
-yup.setLocale({
-  mixed: {
-    notOneOf: () => ({ key: 'errorMsg.rssExist' }),
-  },
-  string: {
-    url: () => ({ key: 'errorMsg.invalidUrl' }),
-  },
-});
-
-const validateUrl = (url, links) => {
-  const schema = yup.string().trim().required().url()
-    .notOneOf(links);
-  return schema.validate(url);
-};
-
-const urlForAxious = (currentUrl) => {
-  const urlForProxyOrigins = new URL('/get', 'https://allorigins.hexlet.app');
-  urlForProxyOrigins.searchParams.set('url', currentUrl);
-  urlForProxyOrigins.searchParams.set('disableCache', true);
-  return urlForProxyOrigins.toString();
-};
-
-const createFeedObj = (parsedFeed, fId, validUrl) => {
-  parsedFeed.feedId = fId;
-  parsedFeed.url = validUrl;
-  return parsedFeed;
-};
-
-const createPostObj = (parsedPosts, fId) => {
-  parsedPosts.forEach((post) => {
-    post.feedId = fId;
-    post.postId = lodash.uniqueId();
-  });
-  return parsedPosts;
-};
-
-const checkOldPostsForNewPosts = (oldPosts, newPosts) => (
-  newPosts.filter((newPost) => !oldPosts.includes(newPost)));
-
-const markClickedElements = (state, watchedState, elements) => {
-  const allPostsEl = elements.initEl.parentElForPosts;
-  allPostsEl.addEventListener('click', (event) => {
-    const clickedPost = event.target;
-    const idClickedPost = clickedPost.getAttribute('data-id');
-    if (idClickedPost === undefined || idClickedPost === null) return;
-    watchedState.stateUI.clickedIdPosts.push(idClickedPost);
-
-    const joinArrayOfPosts = lodash.flattenDeep(state.posts);
-    const infForClikedPost = joinArrayOfPosts.filter((el) => el.postId === idClickedPost);
-    const titleClickedPost = infForClikedPost[0].title;
-    const descClikedPost = infForClikedPost[0].description;
-    const linkClickedPost = infForClikedPost[0].link;
-
-    watchedState.stateUI.modalWinContent = {
-      title: titleClickedPost,
-      decription: descClikedPost,
-      link: linkClickedPost,
-    };
-  });
-};
-
-const addNewPostsAfterUpdate = (stateEl, chosenUrl, watchedState) => {
-  const urlForReqest = urlForAxious(chosenUrl);
-  axios.get(urlForReqest)
-    .then((response) => {
-      const newPosts = parser(response.data).posts.map((element) => element.title);
-      const chosenFeedObj = stateEl.feeds.filter((feed) => feed.url === chosenUrl);
-      const chosenUrlId = chosenFeedObj[0].feedId;
-      const postsForChosenUrl = stateEl.posts.flat().filter((item) => chosenUrlId === item.feedId);
-      const oldPosts = postsForChosenUrl.map((el) => el.title);
-      const postsForAdd = checkOldPostsForNewPosts(oldPosts, newPosts);
-      if (postsForAdd.length > 0) {
-        const postObjForAdd = parser(response.data)
-          .posts.filter((el) => postsForAdd
-            .includes(el.title));
-        const postObjs = createPostObj(postObjForAdd, chosenUrlId);
-        watchedState.posts.push(postObjs);
-      }
-    })
-    .catch((err) => console.log(err));
-};
-
-const checkActualRss = (currentState, elements, watchedState) => {
-  const newPostsToPromises = Promise.all(currentState.arrayOfValidUrl.map(
-    (eachUrl) => addNewPostsAfterUpdate(currentState, eachUrl, watchedState),
-  ));
-  newPostsToPromises.finally(setTimeout(() => {
-    checkActualRss(currentState, elements, watchedState);
-  }, 5000));
-};
-
 const app = () => {
+
+  const defaultLng = 'ru';
+
+  const i18nEl = i18next.createInstance();
+  i18nEl.init({
+    lng: defaultLng,
+    debag: false,
+    resources,
+  });
+
+  yup.setLocale({
+    mixed: {
+      notOneOf: () => ({ key: 'errorMsg.rssExist' }),
+    },
+    string: {
+      url: () => ({ key: 'errorMsg.invalidUrl' }),
+    },
+  });
+
+  const validate = (url, links) => {
+    const schema = yup.string().trim().required().url()
+      .notOneOf(links);
+    return schema.validate(url);
+  };
+
+  const urlForAxious = (currentUrl) => {
+    const urlForProxyOrigins = new URL('/get', 'https://allorigins.hexlet.app');
+    urlForProxyOrigins.searchParams.set('url', currentUrl);
+    urlForProxyOrigins.searchParams.set('disableCache', true);
+    return urlForProxyOrigins.toString();
+  };
+
+  const createFeedObj = (parsedFeed, fId, validUrl) => {
+    parsedFeed.feedId = fId;
+    parsedFeed.url = validUrl;
+    return parsedFeed;
+  };
+
+  const createPostObj = (parsedPosts, fId) => {
+    parsedPosts.forEach((post) => {
+      post.feedId = fId;
+      post.postId = lodash.uniqueId();
+    });
+    return parsedPosts;
+  };
+
+  const checkOldPostsForNewPosts = (oldPosts, newPosts) => (
+    newPosts.filter((newPost) => !oldPosts.includes(newPost)));
+
+  const markClickedElements = (state, watchedState, elements) => {
+    const allPostsEl = elements.initEl.parentElForPosts;
+    allPostsEl.addEventListener('click', (event) => {
+      const clickedPost = event.target;
+      const idClickedPost = clickedPost.getAttribute('data-id');
+      if (idClickedPost === undefined || idClickedPost === null) return;
+      watchedState.stateUI.clickedIdPosts.push(idClickedPost);
+
+      const joinArrayOfPosts = lodash.flattenDeep(state.posts);
+      const infForClikedPost = joinArrayOfPosts.filter((el) => el.postId === idClickedPost);
+      const titleClickedPost = infForClikedPost[0].title;
+      const descClikedPost = infForClikedPost[0].description;
+      const linkClickedPost = infForClikedPost[0].link;
+
+      watchedState.stateUI.modalWinContent = {
+        title: titleClickedPost,
+        decription: descClikedPost,
+        link: linkClickedPost,
+      };
+    });
+  };
+
+  const addNewPostsAfterUpdating = (stateEl, chosenUrl, watchedState) => {
+    const urlForReqest = urlForAxious(chosenUrl);
+    axios.get(urlForReqest)
+      .then((response) => {
+        const newPosts = parser(response.data).posts.map((element) => element.title);
+        const chosenFeedObj = stateEl.feeds.filter((feed) => feed.url === chosenUrl);
+        const chosenUrlId = chosenFeedObj[0].feedId;
+        const postsForChosenUrl = stateEl.posts.flat().filter((item) => chosenUrlId === item.feedId);
+        const oldPosts = postsForChosenUrl.map((el) => el.title);
+        const postsForAdd = checkOldPostsForNewPosts(oldPosts, newPosts);
+        if (postsForAdd.length > 0) {
+          const postObjForAdd = parser(response.data)
+            .posts.filter((el) => postsForAdd
+              .includes(el.title));
+          const postObjs = createPostObj(postObjForAdd, chosenUrlId);
+          watchedState.posts.push(postObjs);
+        }
+      })
+      .catch((err) => console.log(err));
+  };
+
+  const checkActualRss = (currentState, elements, watchedState) => {
+    const newPostsToPromises = Promise.all(currentState.arrayOfValidUrl.map(
+      (eachUrl) => addNewPostsAfterUpdating(currentState, eachUrl, watchedState),
+    ));
+    newPostsToPromises.finally(setTimeout(() => {
+      checkActualRss(currentState, elements, watchedState);
+    }, 5000));
+  };
+
   const interfaceElements = {
     initEl: {
       title: document.querySelector('.display-3'),
@@ -159,7 +160,7 @@ const app = () => {
     event.preventDefault();
 
     const inputUrl = event.target.url.value;
-    validateUrl(inputUrl, state.arrayOfValidUrl)
+    validate(inputUrl, state.arrayOfValidUrl)
       .then((validUrl) => {
         watchedState.status = 'loading';
         axios.get(urlForAxious(validUrl))
